@@ -65,49 +65,46 @@ public class BidService {
         mf.check(user);
     }
 
-    //입찰가가 낮거나, 연속 입찰일 경우 안돼
-    public RequestDTO bidValidation(RequestDTO request) {
-        AuctionProductEntity ape = APR.findByProductId(request.getProductId());
-        if (Long.parseLong(request.getPay()) <= Long.parseLong(ape.getBidPrice())) {
-            request.setResult("제시한 금액이 현재 입찰가보다 낮습니다.");
-            request.setStatus(false);
-        } else if (ape.getBidUserId() == request.getUserId()) {
-            request.setResult("현재 입찰중 입니다.");
-            request.setStatus(false);
-        } else {
-            request.setResult("입찰 성공하셨습니다.");
-            request.setStatus(true);
-        }
-        return request;
-    }
+//    입찰가가 낮거나, 연속 입찰일 경우 안돼
+//    public RequestDTO bidValidation(RequestDTO request) {
+//        AuctionProductEntity ape = APR.findByProductId(request.getProductId());
+//        if (Long.parseLong(request.getPay()) <= Long.parseLong(ape.getBidPrice())) {
+//            request.setResult("제시한 금액이 현재 입찰가보다 낮습니다.");
+//        } else if (ape.getBidUserId() == request.getUserId()) {
+//            request.setResult("현재 입찰중 입니다.");
+//        } else {
+//            request.setResult("입찰 요청 되었습니다.");
+//        }
+//        return request;
+//    }
 
-    public void done(RequestDTO request, UserDTO user) throws Exception {
-        //경매 이력 추가
-        ProductEntity pe = PR.findById(request.getProductId()).get();
-        PAHR.save(ProductAuctionHistoryEntity.builder().productId(request.getProductId())
-            .bidPrice(request.getPay())
-            .productName(pe.getName())
-            .bidUserId(request.getUserId())
-            .build()
-        );
-
-        //경매 진행 상품 변경
-        AuctionProductEntity ap = APR.findByProductId(request.getProductId());
-        long preUserId = 0;
-        String preBalance = "";
-        if (ap.getBidUserId() != 0) {
-            preUserId = ap.getBidUserId();
-            preBalance = ap.getBidPrice();
-        }
-        ap.setBidPrice(request.getPay());
-        ap.setBidUserId(request.getUserId());
-        APR.save(ap);
-
-        //mock api에 정보 변경 요청
-        UserDTO preUser = uf.getUser(preUserId);
-        mf.mock(MockDTO.builder()
-            .preUserName(preUser.getUserName()).preAccount(preUser.getAccount()).preBalance(preBalance)
-            .userName(user.getUserName()).acconut(user.getAccount()).balance(user.getPay()).build());
-    }
+//    public void done(RequestDTO request, UserDTO user) throws Exception {
+//        //경매 이력 추가
+//        ProductEntity pe = PR.findById(request.getProductId()).get();
+//        PAHR.save(ProductAuctionHistoryEntity.builder().productId(request.getProductId())
+//            .bidPrice(request.getPay())
+//            .productName(pe.getName())
+//            .bidUserId(request.getUserId())
+//            .build()
+//        );
+//
+//        //경매 진행 상품 변경
+//        AuctionProductEntity ap = APR.findByProductId(request.getProductId());
+//        long preUserId = 0;
+//        String preBalance = "";
+//        if (ap.getBidUserId() != 0) {
+//            preUserId = ap.getBidUserId();
+//            preBalance = ap.getBidPrice();
+//        }
+//        ap.setBidPrice(request.getPay());
+//        ap.setBidUserId(request.getUserId());
+//        APR.save(ap);
+//
+//        //mock api에 정보 변경 요청
+//        UserDTO preUser = uf.getUser(preUserId);
+//        mf.mock(MockDTO.builder()
+//            .preUserName(preUser.getUserName()).preAccount(preUser.getAccount()).preBalance(preBalance)
+//            .userName(user.getUserName()).acconut(user.getAccount()).balance(user.getPay()).build());
+//    }
 
 }

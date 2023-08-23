@@ -20,7 +20,6 @@ public class RequestDTO {
   private long productId;
   private String pay;
   private String result;
-  private boolean status;
   private String password;
   private String account;
 }
