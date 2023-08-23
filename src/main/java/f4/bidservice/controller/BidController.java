@@ -2,6 +2,8 @@ package f4.bidservice.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import f4.bidservice.dto.AuctionHistoryDTO;
+import f4.bidservice.dto.RequestDTO;
+import f4.bidservice.dto.UserDTO;
 import f4.bidservice.service.BidService;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -35,6 +38,32 @@ public class BidController {
     } else {
       return service.findUserHistory(Long.parseLong(map.get("id").toString()));
     }
+  }
+
+  @PostMapping("/order")
+  public ResponseEntity<String> bid(RequestDTO request, @CookieValue("user") Cookie cookie)
+      throws Exception {
+    //jwt에서 유저ID 가져오기
+    String info = cookie.getValue().split("\\.")[1];
+    Map<String, Object> map = service.decode(info);
+    request.setUserId(Long.parseLong(map.get("id").toString()));
+
+    //userAPI에서 유저 정보 가져오기
+    UserDTO user = service.getUser(request.getUserId());
+    user.setPassword(request.getPassword());
+    user.setPay(request.getPay());
+
+    //사용자 비밀번호 확인 && 잔액 조회
+    service.userCheck(user);
+
+    //입찰가에 대한 유효성 검사
+    request = service.bidValidation(request);
+
+    //입찰 성공인 경우 경매 변경 및 히스토리 추가
+    if (request.isStatus()) {
+      service.done(request, user);
+    }
+    return new ResponseEntity<>(request.getResult(), HttpStatus.OK);
   }
 
   @ExceptionHandler
