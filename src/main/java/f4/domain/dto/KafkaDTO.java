@@ -1,23 +1,23 @@
-package f4.domain.dto.request;
+package f4.domain.dto;
 
+import f4.domain.dto.request.AuctionRequestDto;
 import java.time.LocalDateTime;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
 
-@Getter
-@Setter
+@Data
 @Builder
 @AllArgsConstructor
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class KafkaDTO {
 
+  private Long userId;
   private Long productId;
   @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
   private LocalDateTime time;
-  private Long userId;
   private AuctionRequestDto request;
 }
