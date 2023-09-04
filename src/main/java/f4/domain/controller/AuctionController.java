@@ -1,7 +1,7 @@
 package f4.domain.controller;
 
 import f4.domain.dto.request.AuctionRequestDto;
-import f4.domain.service.impl.AuctionServiceImpl;
+import f4.domain.service.AuctionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 public class AuctionController {
 
-  private final AuctionServiceImpl service;
+  private final AuctionService service;
 
   @PostMapping("/order")
   public ResponseEntity<String> bid(@RequestHeader(name = "userId") Long id,

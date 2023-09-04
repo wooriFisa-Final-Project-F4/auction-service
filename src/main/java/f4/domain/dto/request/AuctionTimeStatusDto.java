@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 import org.springframework.format.annotation.DateTimeFormat;
 
 @Getter
@@ -14,6 +15,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class AuctionTimeStatusDto implements Serializable {
   private String auctionStatus;
   @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")

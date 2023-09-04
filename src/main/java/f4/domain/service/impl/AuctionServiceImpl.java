@@ -2,9 +2,9 @@ package f4.domain.service.impl;
 
 import f4.domain.dto.request.AuctionRequestDto;
 import f4.domain.dto.request.AuctionTimeStatusDto;
-import f4.domain.dto.response.BidCheckRequestDto;
 import f4.domain.dto.request.KafkaDTO;
 import f4.domain.dto.response.ApiResponse;
+import f4.domain.dto.response.BidCheckRequestDto;
 import f4.domain.kafka.Producer;
 import f4.domain.service.AuctionService;
 import f4.domain.service.MockApi;
@@ -25,16 +25,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-@Service
+
 @Slf4j
 @RequiredArgsConstructor
+@Service
 public class AuctionServiceImpl implements AuctionService {
 
     private final Encryptor encryptor;
     private final Producer kafkaProducer;
     @Value(value = "${mock.url}")
     private String mockUrl;
-//    private final MockApi mockApi;
+    private final MockApi mockApi;
     private final ProductAPI productApi;
     private final Logger logger = LoggerFactory.getLogger(AuctionServiceImpl.class);
 
