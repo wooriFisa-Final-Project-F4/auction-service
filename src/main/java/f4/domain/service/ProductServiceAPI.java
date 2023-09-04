@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
 @FeignClient(value = "PRODUCT-SERVICE")
-public interface ProductAPI {
+public interface ProductServiceAPI {
 
   @GetMapping("/product/v1/status/{id}")
   AuctionTimeStatusDto getStatus(@PathVariable long id);
