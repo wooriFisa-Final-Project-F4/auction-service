@@ -6,6 +6,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum ApiStatus {
+
   SUCCESS("success"),
   ERROR("error");
 

@@ -15,6 +15,7 @@ public class MapperConfig {
   public ModelMapper modelMapper() {
     return new ModelMapper();
   }
+
   @Bean
   public ObjectMapper serializingObjectMapper() {
     ObjectMapper objectMapper = new ObjectMapper();
@@ -24,7 +25,7 @@ public class MapperConfig {
   }
 
   @Bean
-  public DateTimeFormatter fomatter(){
+  public DateTimeFormatter formatter() {
     return DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
   }
 }
