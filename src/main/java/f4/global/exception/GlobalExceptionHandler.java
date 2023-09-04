@@ -14,7 +14,7 @@ public class GlobalExceptionHandler {
   @ExceptionHandler({CustomException.class})
   public ResponseEntity<?> customExceptionHandler(CustomException e) {
     log.error(
-        "errorCode: {}, message: {}",
+        "ErrorCode: {}, Message: {}",
         e.getCustomErrorCode().getCode(),
         e.getCustomErrorCode().getMessage());
 
@@ -24,6 +24,18 @@ public class GlobalExceptionHandler {
             .message(e.getCustomErrorCode().getMessage())
             .build(),
         HttpStatus.BAD_REQUEST);
+  }
+
+  @ExceptionHandler(FeignException.class)
+  public ResponseEntity<?> feignExceptionHandler(FeignException e) {
+    log.error("ErrorCode : {}, ErrorMessage : {}, detail : {}", 500, e.getMessage(), e.getObject());
+
+    return new ResponseEntity<>(
+        ErrorDetails.builder()
+            .code(500)
+            .message((String) e.getObject())
+            .build()
+        , HttpStatus.BAD_REQUEST);
   }
 
   @ExceptionHandler({NoSuchAlgorithmException.class})
