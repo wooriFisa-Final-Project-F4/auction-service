@@ -1,6 +1,6 @@
 package f4.domain.kafka;
 
-import f4.domain.dto.request.KafkaDTO;
+import f4.domain.dto.KafkaDTO;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
@@ -16,7 +16,7 @@ public class Producer {
     this.kafkaTemplate = kafkaTemplate;
   }
 
-  public void produce(KafkaDTO data){
-    kafkaTemplate.send(topicName,data.getProductId(),data);
+  public void produce(KafkaDTO kafkaDTO) {
+    kafkaTemplate.send(topicName, kafkaDTO.getProductId(), kafkaDTO);
   }
 }

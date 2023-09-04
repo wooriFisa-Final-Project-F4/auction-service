@@ -1,25 +1,25 @@
 package f4.domain.service.impl;
 
+import static f4.global.constant.ApiStatus.SUCCESS;
+
+import f4.domain.dto.KafkaDTO;
 import f4.domain.dto.request.AuctionRequestDto;
 import f4.domain.dto.request.AuctionTimeStatusDto;
-import f4.domain.dto.request.KafkaDTO;
 import f4.domain.dto.response.ApiResponse;
 import f4.domain.dto.response.BidCheckRequestDto;
 import f4.domain.kafka.Producer;
 import f4.domain.service.AuctionService;
-import f4.domain.service.MockApi;
-import f4.domain.service.ProductAPI;
+import f4.domain.service.MockAccountServiceAPI;
+import f4.domain.service.ProductServiceAPI;
 import f4.global.constant.ApiStatus;
-import f4.global.constant.ValidationResult;
-import f4.global.exception.ErrorDetails;
+import f4.global.constant.CustomErrorCode;
+import f4.global.exception.CustomException;
+import f4.global.exception.FeignException;
 import f4.global.utils.Encryptor;
-import feign.FeignException;
 import java.net.URI;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -31,70 +31,80 @@ import org.springframework.web.util.UriComponentsBuilder;
 @Service
 public class AuctionServiceImpl implements AuctionService {
 
-    private final Encryptor encryptor;
-    private final Producer kafkaProducer;
-    @Value(value = "${mock.url}")
-    private String mockUrl;
-    private final MockApi mockApi;
-    private final ProductAPI productApi;
-    private final Logger logger = LoggerFactory.getLogger(AuctionServiceImpl.class);
+  private final Encryptor encryptor;
+  private final Producer kafkaProducer;
+  @Value(value = "${mock.url}")
+  private String mockUrl;
+  private final MockAccountServiceAPI mockAccountServiceAPI;
+  private final ProductServiceAPI productServiceAPI;
 
-    @Override
-    public String bidOrder(Long id, AuctionRequestDto request){
-        try{
-            if(productValidate(productApi.getStatus(request.getProductId()))){
-                return ValidationResult.NOT_PROGRESS.getMessage();
-            }
-            BidCheckRequestDto user = bidCheckRequestBuilder(request,id);
+  @Override
+  public String submitBid(Long id, AuctionRequestDto auctionRequestDto) {
+    // product-service에서 상품에 경매 시작,종료 시간 및 경매 상태에 대한 정보를 갖고온다.
+    AuctionTimeStatusDto auctionTimeStatusDto = loadByProductId(auctionRequestDto.getProductId());
+    // auctionTimeStatusDto Validator
+    productValidate(auctionTimeStatusDto);
 
-            ApiResponse<ErrorDetails> result = userCheck(user);
-//            ApiResponse<ErrorDetails> result = mockApi.bidAvailabilityCheck(user);
-            if (result.getStatus().equals(ApiStatus.SUCCESS.getApiStatus())) {
-                event(id, request);
-                return ValidationResult.SUCCESS.getMessage();
-            } else {
-                return result.getError().getMessage();
-            }
-        }catch (FeignException e){
-            logger.error("error : { } ", e);
-            return e.getMessage();
-        }
+    //Bid
+    BidCheckRequestDto userInfo = loadByBidCheckRequest(auctionRequestDto, id);
+    ApiResponse<?> result = userBidAvailabilityCheck(userInfo);
+
+    if (SUCCESS != ApiStatus.of(result.getStatus())) {
+      throw new FeignException(result.getError());
     }
 
-    public boolean productValidate(AuctionTimeStatusDto product){
-      return !LocalDateTime.now().isAfter(product.getAuctionEndTime()) && !product.getAuctionStatus()
-          .equals("END") &&
-          !LocalDateTime.now().isBefore(product.getAuctionStartTime()) && !product.getAuctionStatus()
-          .equals("WAIT");
+    event(id, auctionRequestDto);
+    return "입찰에 성공하셨습니다.";
+  }
+
+  private AuctionTimeStatusDto loadByProductId(Long productId) {
+    return productServiceAPI.getStatus(productId);
+  }
+
+  public void productValidate(AuctionTimeStatusDto product) {
+    if (!product.getAuctionStatus().equals("PROGRESS")) {
+      throw new CustomException(CustomErrorCode.NOT_PROGRESS_PRODUCT);
     }
 
-    public BidCheckRequestDto bidCheckRequestBuilder(AuctionRequestDto request, long id){
-        return BidCheckRequestDto.builder()
-            .arteUserId(id)
-            .bidPrice(request.getPrice())
-            .password(encryptor.encrypt(request.getPassword())).build();
+    if (!product.getAuctionStartTime().isBefore(LocalDateTime.now())) {
+      throw new CustomException(CustomErrorCode.NOT_READY_AUCTION);
     }
 
-    public void event(Long id, AuctionRequestDto request){
-        kafkaProducer.produce(KafkaDTO.builder()
-            .productId(request.getProductId())
-            .time(LocalDateTime.now())
-            .userId(id)
-            .request(request)
-            .build());
+    if (!product.getAuctionEndTime().isAfter(LocalDateTime.now())) {
+      throw new CustomException(CustomErrorCode.ALREADY_END_AUCTION);
     }
+  }
 
-    public ApiResponse<ErrorDetails> userCheck(BidCheckRequestDto user){
-        URI uri = UriComponentsBuilder
-            .fromUriString(mockUrl)
-            .path("/woori/account/v1/bid/check")
-            .encode()
-            .build()
-            .expand("Flature")
-            .toUri();
+  public BidCheckRequestDto loadByBidCheckRequest(AuctionRequestDto auctionRequestDto, Long userId) {
+    String encrypt = encryptor.encrypt(auctionRequestDto.getPassword());
 
-        RestTemplate restTemplate = new RestTemplate();
-        return restTemplate.postForObject(uri, user, ApiResponse.class);
-    }
+    return BidCheckRequestDto.builder()
+        .arteUserId(userId)
+        .bidPrice(auctionRequestDto.getPrice())
+        .password(encrypt)
+        .build();
+  }
+
+  public void event(Long id, AuctionRequestDto auctionRequestDto) {
+    kafkaProducer.produce(KafkaDTO.builder()
+        .productId(auctionRequestDto.getProductId())
+        .time(LocalDateTime.now())
+        .userId(id)
+        .request(auctionRequestDto)
+        .build());
+  }
+
+  public ApiResponse<?> userBidAvailabilityCheck(BidCheckRequestDto bidCheckRequestDto) {
+    URI uri = UriComponentsBuilder
+        .fromUriString(mockUrl)
+        .path("/woori/account/v1/bid/check")
+        .encode()
+        .build()
+        .expand("Flature")
+        .toUri();
+
+    RestTemplate restTemplate = new RestTemplate();
+    return restTemplate.postForObject(uri, bidCheckRequestDto, ApiResponse.class);
+  }
 
 }
