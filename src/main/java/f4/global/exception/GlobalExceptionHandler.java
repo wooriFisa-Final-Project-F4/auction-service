@@ -28,12 +28,12 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(FeignException.class)
   public ResponseEntity<?> feignExceptionHandler(FeignException e) {
-    log.error("ErrorCode : {}, ErrorMessage : {}, detail : {}", 500, e.getMessage(), e.getObject());
+    log.error("ErrorCode : {}, ErrorMessage : {}, detail : {}", 500, e.getMessage(), e.getObject().toString());
 
     return new ResponseEntity<>(
         ErrorDetails.builder()
             .code(500)
-            .message((String) e.getObject())
+            .message(e.getObject().toString())
             .build()
         , HttpStatus.BAD_REQUEST);
   }
