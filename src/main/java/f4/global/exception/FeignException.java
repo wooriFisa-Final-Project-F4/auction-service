@@ -1,5 +1,6 @@
 package f4.global.exception;
 
+import java.net.ConnectException;
 import lombok.Getter;
 
 @Getter

@@ -1,5 +1,6 @@
 package f4.global.exception;
 
+import java.net.ConnectException;
 import java.security.NoSuchAlgorithmException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

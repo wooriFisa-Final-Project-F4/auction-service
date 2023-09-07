@@ -13,7 +13,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class KafkaDTO {
+public class KafkaDto {
 
   private Long userId;
   private Long productId;
