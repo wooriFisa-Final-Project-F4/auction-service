@@ -8,6 +8,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 @FeignClient(value = "PRODUCT-SERVICE")
 public interface ProductServiceAPI {
 
-  @GetMapping("/product/v1/status/{id}")
+  @GetMapping("/api/product/v1/status/{id}")
   AuctionTimeStatusDto getStatus(@PathVariable long id);
 }
