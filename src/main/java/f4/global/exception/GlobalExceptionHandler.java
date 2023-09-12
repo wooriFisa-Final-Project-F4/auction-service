@@ -27,6 +27,18 @@ public class GlobalExceptionHandler {
         HttpStatus.BAD_REQUEST);
   }
 
+  @ExceptionHandler(FailException.class)
+  public ResponseEntity<?> failExceptionHandler(FailException e) {
+    log.error("ErrorCode : {}, ErrorMessage : {}, detail : {}", 500, e.getMessage(), e.getObject().toString());
+
+    return new ResponseEntity<>(
+        ErrorDetails.builder()
+            .code(500)
+            .message(e.getObject().toString())
+            .build()
+        , HttpStatus.BAD_REQUEST);
+  }
+
   @ExceptionHandler(FeignException.class)
   public ResponseEntity<?> feignExceptionHandler(FeignException e) {
     log.error("ErrorCode : {}, ErrorMessage : {}, detail : {}", 500, e.getMessage(), e.getObject().toString());
