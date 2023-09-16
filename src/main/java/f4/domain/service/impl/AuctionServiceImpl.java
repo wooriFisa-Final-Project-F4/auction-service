@@ -14,6 +14,7 @@ import f4.domain.service.ProductServiceAPI;
 import f4.global.constant.ApiStatus;
 import f4.global.constant.CustomErrorCode;
 import f4.global.exception.CustomException;
+import f4.global.exception.FailException;
 import f4.global.exception.FeignException;
 import f4.global.utils.Encryptor;
 import java.time.LocalDateTime;
@@ -45,7 +46,7 @@ public class AuctionServiceImpl implements AuctionService {
       BidCheckRequestDto userInfo = loadByBidCheckRequest(auctionRequestDto, id);
       ApiResponse<?> result = mockAccountServiceAPI.bidAvailabilityCheck(userInfo);
       if (SUCCESS != ApiStatus.of(result.getStatus())) {
-        throw new FeignException(result.getError());
+        throw new FailException(result.getError());
       }
     } catch (Exception e) {
       throw new FeignException(e.getMessage());
