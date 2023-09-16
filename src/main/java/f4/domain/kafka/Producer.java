@@ -17,6 +17,6 @@ public class Producer {
   }
 
   public void produce(KafkaDto kafkaDTO) {
-    kafkaTemplate.send(topicName, kafkaDTO.getProductId(), kafkaDTO);
+    kafkaTemplate.send(topicName, kafkaDTO);
   }
 }
